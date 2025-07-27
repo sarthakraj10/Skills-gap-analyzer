@@ -1,0 +1,236 @@
+import streamlit as st
+import PyPDF2
+import docx2txt
+import string
+import re
+import matplotlib.pyplot as plt
+
+# Custom stop words list
+STOP_WORDS = set([
+    'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", 
+    "you've", "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 
+    'him', 'his', 'himself', 'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 
+    'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 
+    'who', 'whom', 'this', 'that', "that'll", 'these', 'those', 'am', 'is', 'are', 'was',
+    'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did',
+    'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while',
+    'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through',
+    'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out',
+    'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there',
+    'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most',
+    'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than',
+    'too', 'very', 's', 't', 'can', 'will', 'just', 'don', "don't", 'should', "should've",
+    'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't",
+    'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't",
+    'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan',
+    "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"
+])
+
+# Sample skill database (expand this list)
+SKILLS_DB = [
+    'python', 'java', 'sql', 'excel', 'machine learning', 'data analysis',
+    'project management', 'communication', 'leadership', 'problem solving',
+    'teamwork', 'time management', 'aws', 'azure', 'docker', 'kubernetes',
+    'tensorflow', 'pytorch', 'scikit-learn', 'pandas', 'numpy', 'tableau',
+    'power bi', 'html', 'css', 'javascript', 'react', 'node.js', 'flask',
+    'django', 'git', 'github', 'linux', 'statistics', 'deep learning',
+    'natural language processing', 'computer vision', 'agile', 'scrum'
+]
+
+def extract_text(file):
+    """Extract text from PDF or DOCX files"""
+    if file.type == "application/pdf":
+        reader = PyPDF2.PdfReader(file)
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text()
+        return text
+    elif file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        return docx2txt.process(file)
+    return file.getvalue().decode("utf-8")
+
+def clean_text(text):
+    """Clean and tokenize text without NLTK"""
+    # Convert to lowercase
+    text = text.lower()
+    # Remove punctuation
+    text = text.translate(str.maketrans('', '', string.punctuation))
+    # Remove numbers
+    text = re.sub(r'\d+', '', text)
+    # Remove extra whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+    # Tokenize
+    tokens = text.split()
+    # Remove stop words
+    tokens = [word for word in tokens if word not in STOP_WORDS and len(word) > 2]
+    return tokens
+
+def extract_skills(tokens):
+    """Extract skills from tokens using skill database"""
+    text = ' '.join(tokens)
+    found_skills = []
+    
+    # Check for 1-gram skills
+    for skill in SKILLS_DB:
+        if ' ' not in skill:  # Single word skills
+            if skill in tokens:
+                found_skills.append(skill)
+    
+    # Check for multi-word skills
+    for skill in SKILLS_DB:
+        if ' ' in skill and skill in text:
+            found_skills.append(skill)
+    
+    return list(set(found_skills))
+
+def plot_skill_comparison(resume_skills, jd_skills):
+    """Create skill comparison visualization"""
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Prepare data
+    all_skills = sorted(set(resume_skills + jd_skills))
+    resume_counts = [1 if skill in resume_skills else 0 for skill in all_skills]
+    jd_counts = [1 if skill in jd_skills else 0 for skill in all_skills]
+    
+    # Plot
+    width = 0.35
+    x = range(len(all_skills))
+    
+    ax.bar([i - width/2 for i in x], resume_counts, width, label='Resume', color='skyblue')
+    ax.bar([i + width/2 for i in x], jd_counts, width, label='Job Description', color='salmon')
+    
+    ax.set_xlabel('Skills')
+    ax.set_ylabel('Presence (1 = Present)')
+    ax.set_title('Skill Comparison')
+    ax.set_xticks(x)
+    ax.set_xticklabels(all_skills, rotation=45, ha='right')
+    ax.legend()
+    
+    plt.tight_layout()
+    return fig
+
+# Streamlit app
+st.set_page_config(page_title="Skills Gap Analyzer", layout="wide")
+st.title("Skills Gap Analyzer")
+st.markdown("Compare resume skills with job description requirements to identify missing skills")
+
+# Input sections
+with st.expander("Upload or Paste Content", expanded=True):
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("Resume Input")
+        resume_option = st.radio("Select resume input method:", 
+                               ('Upload File', 'Paste Text'), key='resume_radio')
+        
+        if resume_option == 'Upload File':
+            resume_file = st.file_uploader("Upload Resume (PDF or DOCX)", 
+                                          type=['pdf', 'docx'], key='resume_uploader')
+            resume_text = extract_text(resume_file) if resume_file else ""
+        else:
+            resume_text = st.text_area("Paste Resume Text", height=200, key='resume_text')
+
+    with col2:
+        st.subheader("Job Description Input")
+        jd_option = st.radio("Select JD input method:", 
+                            ('Upload File', 'Paste Text'), key='jd_radio')
+        
+        if jd_option == 'Upload File':
+            jd_file = st.file_uploader("Upload Job Description (PDF or DOCX)", 
+                                      type=['pdf', 'docx'], key='jd_uploader')
+            jd_text = extract_text(jd_file) if jd_file else ""
+        else:
+            jd_text = st.text_area("Paste Job Description Text", height=200, key='jd_text')
+
+# Process when both inputs are available
+if st.button("Analyze Skills Gap", type="primary") and resume_text and jd_text:
+    with st.spinner("Analyzing skills..."):
+        # Clean and tokenize text
+        resume_tokens = clean_text(resume_text)
+        jd_tokens = clean_text(jd_text)
+        
+        # Extract skills
+        resume_skills = extract_skills(resume_tokens)
+        jd_skills = extract_skills(jd_tokens)
+        
+        # Calculate metrics
+        resume_set = set(resume_skills)
+        jd_set = set(jd_skills)
+        missing_skills = list(jd_set - resume_set)
+        matching_count = len(resume_set & jd_set)
+        score = round((matching_count / len(jd_set)) * 100, 2) if jd_set else 0
+        
+        # Display results
+        st.subheader("Analysis Results")
+        
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Resume Score", f"{score}%", 
+                   help="Percentage of required skills found in resume")
+        col2.metric("Matching Skills", matching_count)
+        col3.metric("Missing Skills", len(missing_skills))
+        
+        # Visualizations
+        st.subheader("Skill Comparison")
+        if resume_skills or jd_skills:
+            fig = plot_skill_comparison(resume_skills, jd_skills)
+            st.pyplot(fig)
+        else:
+            st.warning("No skills detected for visualization")
+            
+        # Detailed lists
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader(f"Resume Skills ({len(resume_skills)})")
+            if resume_skills:
+                st.write(", ".join(sorted(resume_skills)))
+            else:
+                st.warning("No skills detected in resume")
+            
+        with col2:
+            st.subheader(f"Job Description Skills ({len(jd_skills)})")
+            if jd_skills:
+                st.write(", ".join(sorted(jd_skills)))
+            else:
+                st.warning("No skills detected in job description")
+        
+        # Missing skills
+        if missing_skills:
+            st.subheader(f"Missing Skills ({len(missing_skills)})")
+            for i, skill in enumerate(sorted(missing_skills), 1):
+                st.markdown(f"{i}. **{skill}**")
+        else:
+            st.success("🎉 No missing skills! Your resume meets all job requirements")
+            
+        # Improvement suggestions
+        if missing_skills:
+            st.subheader("Improvement Suggestions")
+            st.markdown(f"""
+            - **Add these skills to your resume**: {', '.join(missing_skills[:3])}
+            - **Highlight transferable skills** that relate to these requirements
+            - **Include projects** that demonstrate experience with these skills
+            - **Take online courses** to develop proficiency in these areas
+            """)
+            
+        # Downloadable report
+        report = f"""Skills Gap Analysis Report
+=================================
+
+Resume Score: {score}%
+Matching Skills: {matching_count}
+Missing Skills: {len(missing_skills)}
+
+===== Resume Skills =====
+{', '.join(sorted(resume_skills)) if resume_skills else 'No skills detected'}
+
+===== Required Skills =====
+{', '.join(sorted(jd_skills)) if jd_skills else 'No skills detected'}
+
+===== Missing Skills =====
+{', '.join(sorted(missing_skills)) if missing_skills else 'No missing skills!'}
+"""
+        st.download_button("Download Full Report", report, 
+                          file_name="skills_gap_report.txt",
+                          mime="text/plain")
+else:
+    st.warning("Please provide both resume and job description content")
