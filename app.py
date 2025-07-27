@@ -34,8 +34,42 @@ SKILLS_DB = [
     'tensorflow', 'pytorch', 'scikit-learn', 'pandas', 'numpy', 'tableau',
     'power bi', 'html', 'css', 'javascript', 'react', 'node.js', 'flask',
     'django', 'git', 'github', 'linux', 'statistics', 'deep learning',
-    'natural language processing', 'computer vision', 'agile', 'scrum'
+    'natural language processing', 'computer vision', 'agile', 'scrum',
+    'c', 'c++', 'c#', 'r', 'go', 'ruby', 'swift', 'typescript', 'matlab',
+    'scala', 'perl', 'next.js', 'angular', 'vue.js', 'bootstrap', 'sass',
+    'webpack', 'jquery', 'json', 'rest api', 'graphql', 'gcp', 'terraform',
+    'jenkins', 'ansible', 'prometheus', 'grafana', 'ci/cd', 'cloudformation',
+    'hadoop', 'spark', 'hive', 'pig', 'kafka', 'airflow', 'dbt', 'etl',
+    'bigquery', 'snowflake', 'redshift', 'mysql', 'postgresql', 'oracle',
+    'mongodb', 'cassandra', 'redis', 'sqlite', 'elasticsearch', 'seaborn',
+    'matplotlib', 'xgboost', 'lightgbm', 'catboost', 'nlp', 'ocr', 'cv2',
+    'transformers', 'huggingface', 'lookml', 'qlikview', 'superset', 'looker',
+    'cognos', 'datarobot', 'jira', 'confluence', 'bitbucket', 'svn', 'vscode',
+    'intellij', 'eclipse', 'pycharm', 'sublime text', 'critical thinking',
+    'adaptability', 'creativity', 'collaboration', 'emotional intelligence',
+    'work ethic', 'interpersonal skills', 'conflict resolution',
+    'decision making', 'negotiation', 'api testing', 'postman', 'swagger',
+    'unit testing', 'integration testing', 'tdd', 'bdd', 'data wrangling',
+    'data cleaning', 'feature engineering', 'model deployment', 'mlops',
+    'chatgpt', 'llm', 'generative ai', 'autoencoders', 'gan',
+    'diffusion models', 'reinforcement learning', 'self-supervised learning',
+    'zero-shot learning', 'few-shot learning', 'shell scripting', 'bash',
+    'powershell', 'windows', 'macos', 'ubuntu', 'centos', 'network security',
+    'penetration testing', 'vulnerability assessment', 'firewalls',
+    'encryption', 'ssl/tls', 'linear algebra', 'calculus', 'probability',
+    'information theory', 'optimization', 'graph theory', 'product management',
+    'market research', 'a/b testing', 'user research', 'growth hacking', 'seo',
+    'sem', 'kpi tracking', 'google analytics', 'mixpanel', 'amplitude',
+    'funnel analysis', 'cohort analysis', 'technical writing', 'documentation',
+    'content creation', 'blogging', 'copywriting', 'storytelling', 'mentoring',
+    'training', 'public speaking', 'presentation skills',
+    'instructional design', 'gdpr', 'hipaa', 'compliance', 'risk management',
+    'audit', 'fastapi', 'streamlit', 'dash', 'gradio', 'keras', 'openai gym',
+    'time series forecasting', 'anomaly detection', 'clustering',
+    'dimensionality reduction', 'pca', 'tsne', 'resume parsing',
+    'skill matching', 'job recommendation', 'ats optimization'
 ]
+
 
 def extract_text(file):
     """Extract text from PDF or DOCX files"""
